@@ -1,10 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <bitset>
 #include <iomanip>
 #include <sstream>
-#include <bitset>
-#include <string>
 
 
 using namespace std;
@@ -27,19 +24,30 @@ public :
 };
 
 
+
+// method declaration :
+
+// 1-- main methods
+
 vector<int> padding(vector<int> input);
 
 vector<Block> parsing(vector<int> input);
 
 vector<Block> expansion(Block block);
 
+vector<string> sha_256(vector<int> input);
+
+vector<Block> preprocess(string txt);
+
+string Bin2Hex(const string &s);
+
+
+// 2 -- helping methods
+
 vector<int> strToBinary(string txt);
 
 string GetBinaryStringFromHexString(string sHex);
 
-vector<string> sha_256();
-
-vector<Block> preprocess(string txt);
 
 Block ROT(Block block, int n);
 
@@ -64,6 +72,7 @@ Block XOR(Block block1, Block block2);
 vector<int> XOR(vector<int> block1, vector<int> block2);
 
 Block add(Block block1, Block block2);
+
 vector<int> add(vector<int> block1, vector<int> block2);
 
 
@@ -74,66 +83,19 @@ vector<int> maj(vector<int> x, vector<int> y, vector<int> z);
 vector<int> andGate(vector<int> x, vector<int> y);
 
 vector<int> notGate(vector<int> x);
-vector<int> bitsetToVecInt ( bitset<32> b);
+
+vector<int> bitsetToVecInt(bitset<32> b);
+
+vector<int> bitsetToVecInt(bitset<8> b);
 
 
 static int numberOfBlocks;
 
 int main() {
-    vector<int> x;
-    x.push_back(1);
-    x.push_back(0);
-    x.push_back(1);
-    x.push_back(1);
 
 
-    vector<int> v = padding(x);
-    int sum = 0;
-    for (int i = 0; i < v.size(); ++i) {
-        if (v[i] == 1) {
-            sum++;
-            int a = v[i];
-//           cout<< a  <<endl;
+    sha_256(strToBinary("abc"));
 
-
-        }
-
-//        std::cout <<v[i]<< endl;
-    }
-
-//    std::cout <<sum<< endl;
-//    string str  ="1010";
-
-//    std::cout << std :: hex << ((unsigned char) 12 + 4)   << endl;
-
-
-    string s = "6a09e668";
-    string s1 = GetBinaryStringFromHexString(s);
-    bitset<32> s2(s1);
-    cout << s2 << endl;
-    vector<int> a ,b;
-    a.push_back(1);
-    a.push_back(0);
-    a.push_back(1);
-    a.push_back(0);
-    a.push_back(1);
-    a.push_back(0);
-    a.push_back(1);
-
-    b.push_back(1);
-    b.push_back(0);
-    b.push_back(1);
-    b.push_back(1);
-    b.push_back(1);
-    b.push_back(0);
-    b.push_back(0);
-
-
-    a = andGate( a, b );
-
-    for (int j = 0; j < a.size(); j++) {
-        cout <<   a[j];
-    }
 
     return 0;
 }
@@ -153,7 +115,6 @@ vector<int> padding(vector<int> input) {
 
     for (int i = 0; i < binary.size(); i++) {
         tmpInput.push_back((binary[i]));
-//        std::cout <<binary[i]<< endl;
     }
 
 
@@ -368,9 +329,9 @@ Block add(Block block1, Block block2) {
 
     }
 
-    if ( c_in == 1)
+    if (c_in == 1)
         result.data.push_back(1);
-    std:: reverse(result.data.begin() , result.data.end());
+    std::reverse(result.data.begin(), result.data.end());
 
     return result;
 }
@@ -381,19 +342,31 @@ vector<int> add(vector<int> block1, vector<int> block2) {
 
     int c_in = 0;
     int s = 0;
-    for (int i = block1.size() - 1; i >=  0 ; i--) {
+    int size = max(block1.size(), block2.size());
+    for (int i = size - 1; i >= 0; i--) {
 
-        s = block1[i] ^ block2[i] ^ c_in;
-        c_in = (block1[i] & block2[i]) | (c_in & (block1[i] ^ block2[i]));
 
+        if (size <= block1.size() && size <= block2.size()) {
+            s = block1[i] ^ block2[i] ^ c_in;
+            c_in = (block1[i] & block2[i]) | (c_in & (block1[i] ^ block2[i]));
+        } else if (size > block1.size()) {
+
+            s = c_in ^ block2[i];
+            c_in = c_in & block2[i];
+
+        } else {
+            s = c_in ^ block1[i];
+            c_in = c_in & block1[i];
+
+        }
         result.push_back(s);
 
     }
 
-    if ( c_in == 1)
+    if (c_in == 1)
         result.push_back(1);
-    std:: reverse(result.begin() , result.end());
-    return  result;
+    std::reverse(result.begin(), result.end());
+    return result;
 }
 
 Block sigma0(Block block) {
@@ -480,7 +453,7 @@ vector<string> sha_256(vector<int> input) {
     vector<int> paddingResult = padding(input);
     vector<Block> blocks = parsing(paddingResult);
     auto N = static_cast<int>(blocks.size());
-    vector<string> hashValues;
+    vector<string> hashValues, k;
     hashValues.emplace_back("6a09e668");
     hashValues.emplace_back("bb67ae85");
     hashValues.emplace_back("3c6ef372");
@@ -490,19 +463,92 @@ vector<string> sha_256(vector<int> input) {
     hashValues.emplace_back("1f83d9ab");
     hashValues.emplace_back("5be0cd19");
 
-    vector<int> a, b, c, d, e, f, g, h , t1 , t2 ;
+    vector<int> a, b, c, d, e, f, g, h, t1, t2;
     vector<int> pre_a, pre_b, pre_c, pre_d, pre_e, pre_f, pre_g, pre_h;
 //        init variables
-    a = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[0])) );
-    b = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[1])) );
-    c = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[2])) );
-    d = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[3])) );
-    e = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[4])) );
-    f = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[5])) );
-    g = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[6])) );
-    h = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[7])) );
+    a = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[0])));
+    b = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[1])));
+    c = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[2])));
+    d = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[3])));
+    e = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[4])));
+    f = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[5])));
+    g = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[6])));
+    h = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[7])));
 
 //    todo : initialize vector k
+
+    k.emplace_back("428a2f98");
+    k.emplace_back("71374491");
+    k.emplace_back("b5c0fbcf");
+    k.emplace_back("e9b5dba5");
+    k.emplace_back("3956c25b");
+    k.emplace_back("59f111f1");
+    k.emplace_back("923f82a4");
+    k.emplace_back("ab1c5ed5");
+
+    k.emplace_back("d807aa98");
+    k.emplace_back("12835b01");
+    k.emplace_back("243185be");
+    k.emplace_back("550c7dc3");
+    k.emplace_back("72be5d74");
+    k.emplace_back("80deb1fe");
+    k.emplace_back("9bdc06a7");
+    k.emplace_back("c19bf174");
+
+    k.emplace_back("e49b69c1");
+    k.emplace_back("efbe4786");
+    k.emplace_back("0fc19dc6");
+    k.emplace_back("240ca1cc");
+    k.emplace_back("2de92c6f");
+    k.emplace_back("4a7484aa");
+    k.emplace_back("5cb0a9dc");
+    k.emplace_back("76f988da");
+
+    k.emplace_back("983e5152");
+    k.emplace_back("a831c66d");
+    k.emplace_back("b00327c8");
+    k.emplace_back("bf597fc7");
+    k.emplace_back("c6e00bf3");
+    k.emplace_back("d5a79147");
+    k.emplace_back("06ca6341");
+    k.emplace_back("14292967");
+
+    k.emplace_back("27v70a85");
+    k.emplace_back("2e1b2138");
+    k.emplace_back("4d2c6dfc");
+    k.emplace_back("53380d13");
+    k.emplace_back("650a7354");
+    k.emplace_back("766a0abb");
+    k.emplace_back("81c2c92e");
+    k.emplace_back("92722c85");
+
+    k.emplace_back("a2bfe8a1");
+    k.emplace_back("a81a664b");
+    k.emplace_back("c24b8b70");
+    k.emplace_back("c76c51a3");
+    k.emplace_back("d192e819");
+    k.emplace_back("d6990624");
+    k.emplace_back("f40e3585");
+    k.emplace_back("106aa070");
+
+    k.emplace_back("19a4c116");
+    k.emplace_back("1e376c08");
+    k.emplace_back("2748774c");
+    k.emplace_back("34b0bcb5");
+    k.emplace_back("391c0cb3");
+    k.emplace_back("4ed8aa4a");
+    k.emplace_back("5b9cca4f");
+    k.emplace_back("682e6ff3");
+
+    k.emplace_back("748f82ee");
+    k.emplace_back("78a563f");
+    k.emplace_back("84c87814");
+    k.emplace_back("8cc70208");
+    k.emplace_back("90befffa");
+    k.emplace_back("a4506ceb");
+    k.emplace_back("bef9a3f7");
+    k.emplace_back("c67178f2");
+
 
     for (int i = 0; i < N; i++) {
 
@@ -518,15 +564,14 @@ vector<string> sha_256(vector<int> input) {
         vector<Block> w = expansion(blocks[i]);
 
 
+        for (int j = 0; j < 64; j++) {
 
-        for (int j = 0; j < 64 ; j++) {
-
-            vector<int> chv= ch(e,f,g);
-            vector<int> majv = maj( a,b,c);
+            vector<int> chv = ch(e, f, g);
+            vector<int> majv = maj(a, b, c);
             bigSimga0(a);
-
-//         todo :   t1 = add(add( add(h,bigSimga1(e))  ,  add(ch(e,f,g), kj)  ), w[j].data  );
-            t2 = add(bigSimga0(a) , maj(a,b,c));
+            vector<int> k_int = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(k[j])));
+            t1 = add(add(add(h, bigSimga1(e)), add(ch(e, f, g), k_int)), w[j].data);
+            t2 = add(bigSimga0(a), maj(a, b, c));
             h = g;
             g = f;
             f = e;
@@ -534,28 +579,31 @@ vector<string> sha_256(vector<int> input) {
             d = c;
             c = b;
             b = a;
-            a = add( t1, t2);
+            a = add(t1, t2);
         }
 
 //         updating has values
 
 
-        a = add(a,pre_a );
-        b = add(b,pre_b );
-        c = add(c,pre_c);
-        d = add(d,pre_d );
-        e = add(e,pre_e );
-        f = add(f,pre_f );
-        g = add(g,pre_g );
-        h = add(h,pre_h );
+        a = add(a, pre_a);
+        b = add(b, pre_b);
+        c = add(c, pre_c);
+        d = add(d, pre_d);
+        e = add(e, pre_e);
+        f = add(f, pre_f);
+        g = add(g, pre_g);
+        h = add(h, pre_h);
+        for (int l = 0; l < a.size(); ++l) {
+            cout << a[l];
 
+        }
 
     }
 
 
 //    TODO : update hashvalues : convert a-b-c-d-e-f-g-h to hex String and put them in the hashvalues vector
 
-     return hashValues;
+    return hashValues;
 
 
 }
@@ -617,7 +665,7 @@ vector<int> andGate(vector<int> x, vector<int> y) {
 
     vector<int> result;
 
-    for (int i = 0; i < x.size(); i++) {
+    for (int i = 0; i < min(x.size(), y.size()); i++) {
 
         result.push_back(x[i] & y[i]);
 
@@ -633,7 +681,7 @@ vector<int> notGate(vector<int> x) {
 
     for (int i = 0; i < x.size(); i++) {
 
-        result.push_back( not x[i]);
+        result.push_back(not x[i]);
 
     }
 
@@ -641,13 +689,42 @@ vector<int> notGate(vector<int> x) {
 
 }
 
-vector<int> bitsetToVecInt ( bitset<32> b){
+vector<int> bitsetToVecInt(bitset<32> b) {
 
     vector<int> res;
     for (int i = 0; i < b.size(); i++) {
-        res.push_back((int)b[i]);
+        res.push_back((int) b[i]);
 
     }
     return res;
 
 }
+
+vector<int> bitsetToVecInt(bitset<8> b) {
+
+    vector<int> res;
+    for (int i = 0; i < b.size(); i++) {
+        res.push_back((int) b[i]);
+
+    }
+    return res;
+
+}
+
+vector<int> strToBinary(string txt) {
+
+    vector<int> result;
+    for (int i = 0; i < txt.size(); i++) {
+
+        vector<int> tmp = bitsetToVecInt(bitset<8>(txt[i]));
+        for (int j = 0; j < tmp.size(); ++j) {
+            result.push_back(tmp[j]);
+
+        }
+    }
+
+    return result;
+
+}
+
+
