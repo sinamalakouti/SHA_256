@@ -88,6 +88,11 @@ vector<int> bitsetToVecInt(bitset<32> b);
 
 vector<int> bitsetToVecInt(bitset<8> b);
 
+vector<int> bitsetToVecInt(bitset<64> b);
+
+vector<int> multiply(int  n , vector<int> x);
+vector<int> sub ( vector<int> x , vector<int> y );
+string intToChar(int a);
 
 static int numberOfBlocks;
 
@@ -96,12 +101,36 @@ int main() {
 
     sha_256(strToBinary("abc"));
 
+    vector<int> a, b;
+    a.push_back(1);
+    a.push_back(1);
+    a.push_back(1);
+    a.push_back(0);
+
+    b.push_back(1);
+    b.push_back(1);
+    b.push_back(0);
+    b.push_back(0);
+    b.push_back(0);
+
+    a = SHF(a, 3);
+//
+//    for (int i = 0; i < a.size(); ++i) {
+//        cout<<a[i];
+//    }
+//
+
 
     return 0;
 }
 
 vector<int> padding(vector<int> input) {
 
+//    for (int j = 0; j < input.size(); ++j) {
+//        cout<<input[j];
+//    }
+//cout<<" " << endl;
+    int size = input.size();
 
     vector<int> tmpInput = input;
 
@@ -111,7 +140,7 @@ vector<int> padding(vector<int> input) {
         tmpInput.push_back(0);
     }
 
-    std::string binary = std::bitset<64>(input.size()).to_string(); //to binary
+    vector<int> binary = bitsetToVecInt(bitset<64>(size)); //to binary
 
     for (int i = 0; i < binary.size(); i++) {
         tmpInput.push_back((binary[i]));
@@ -273,8 +302,8 @@ vector<Block> expansion(Block block) {
 
         Block b;
 
-        Block temp1 = add(sigma1(blocks[i - 2]), blocks[i - 7]);
-        Block temp2 = add(sigma0(blocks[i - 15]), blocks[i - 16]);
+        Block temp1 = add(sigma1(blocks[i - 1]), blocks[i - 6]);
+        Block temp2 = add(sigma0(blocks[i - 12]), blocks[i - 15]);
 
         b = add(temp1, temp2);
         std::reverse(b.data.begin(), b.data.end());
@@ -287,31 +316,40 @@ vector<Block> expansion(Block block) {
 
 Block XOR(Block block1, Block block2) {
 
+
     Block result;
 
-    for (int i = 0; i < block1.data.size(); i++) {
+    int minSize = min(block1.data.size(), block2.data.size());
+    std::reverse(block1.data.begin(), block1.data.end());
+    std::reverse(block2.data.begin(), block2.data.end());
+
+    for (int i = 0; i < minSize; i++) {
 
         result.data.push_back(block1.data[i] ^ block2.data[i]);
-
     }
+
+    std::reverse(result.data.begin(), result.data.end());
 
     return result;
 
 }
 
+vector<int> XOR(vector<int> x, vector<int> y) {
 
-vector<int> XOR(vector<int> block1, vector<int> block2) {
 
     vector<int> result;
 
-    for (int i = 0; i < block1.size(); i++) {
+    int minSize = min(x.size(), y.size());
+    std::reverse(x.begin(), x.end());
+    std::reverse(y.begin(), y.end());
 
-        result.push_back(block1[i] ^ block2[i]);
+    for (int i = 0; i < minSize; i++) {
 
+        result.push_back(x[i] ^ y[i]);
     }
 
+    std::reverse(result.begin(), result.end());
     return result;
-
 }
 
 Block add(Block block1, Block block2) {
@@ -320,7 +358,10 @@ Block add(Block block1, Block block2) {
 
     int c_in = 0;
     int s = 0;
-    for (int i = block1.data.size() - 1; i >= 0; i--) {
+    int size = min(block1.data.size(), block2.data.size());
+    std::reverse(block1.data.begin(), block1.data.end());
+    std::reverse(block2.data.begin(), block2.data.end());
+    for (int i = 0; i < size; i++) {
 
         s = block1.data[i] ^ block2.data[i] ^ c_in;
         c_in = (block1.data[i] & block2.data[i]) | (c_in & (block1.data[i] ^ block2.data[i]));
@@ -329,8 +370,7 @@ Block add(Block block1, Block block2) {
 
     }
 
-    if (c_in == 1)
-        result.data.push_back(1);
+
     std::reverse(result.data.begin(), result.data.end());
 
     return result;
@@ -342,29 +382,33 @@ vector<int> add(vector<int> block1, vector<int> block2) {
 
     int c_in = 0;
     int s = 0;
-    int size = max(block1.size(), block2.size());
-    for (int i = size - 1; i >= 0; i--) {
+    int size = min(block1.size(), block2.size());
+    std::reverse(block1.begin(), block1.end());
+    std::reverse(block2.begin(), block2.end());
+    for (int i = 0; i < size; i++) {
 
 
-        if (size <= block1.size() && size <= block2.size()) {
-            s = block1[i] ^ block2[i] ^ c_in;
-            c_in = (block1[i] & block2[i]) | (c_in & (block1[i] ^ block2[i]));
-        } else if (size > block1.size()) {
+//        if (size <= block1.size() && size <= block2.size()) {
+        s = block1[i] ^ block2[i] ^ c_in;
+        c_in = (block1[i] & block2[i]) | (c_in & (block1[i] ^ block2[i]));
+//        } else if (size > block1.size()) {
 
-            s = c_in ^ block2[i];
-            c_in = c_in & block2[i];
+//            s = c_in ^ block2[i];
+//            c_in = c_in & block2[i];
 
-        } else {
-            s = c_in ^ block1[i];
-            c_in = c_in & block1[i];
+//        } else {
+//            s = c_in ^ block1[i];
+//            c_in = c_in & block1[i];
 
-        }
+//        }
+
+
         result.push_back(s);
 
     }
 
-    if (c_in == 1)
-        result.push_back(1);
+//    if (c_in == 1)
+//        result.push_back(1);
     std::reverse(result.begin(), result.end());
     return result;
 }
@@ -385,15 +429,72 @@ Block sigma1(Block block) {
 
     Block result;
 
-    Block temp = XOR(ROT(block, 19), ROT(block, 9));
+    Block temp = XOR(ROT(block, 9), ROT(block, 19));
 
     result = XOR(temp, SHF(block, 9));
     return result;
 }
 
+
+string binToHex(vector<int> binArr) {
+    string result = "";
+    string temp = "";
+    for (int i = 1; i <= 8; i++) {
+        temp = "";
+        for (int j = ((i - 1) * 4); j <= (i * 4) - 1; j++) {
+            temp.append(intToChar(binArr[j]));
+        }
+        if (temp.compare("0000") == 0) {
+            result.append("0");
+        } else if (temp.compare("0001") == 0) {
+            result.append("1");
+        } else if (temp.compare("0010") == 0) {
+            result.append("2");
+        } else if (temp.compare("0011") == 0) {
+            result.append("3");
+        } else if (temp.compare("0100") == 0) {
+            result.append("4");
+        } else if (temp.compare("0101") == 0) {
+            result.append("5");
+        } else if (temp.compare("0110") == 0) {
+            result.append("6");
+        } else if (temp.compare("0111") == 0) {
+            result.append("7");
+        } else if (temp.compare("1000") == 0) {
+            result.append("8");
+        } else if (temp.compare("1001") == 0) {
+            result.append("9");
+        } else if (temp.compare("1010") == 0) {
+            result.append("a");
+        } else if (temp.compare("1011") == 0) {
+            result.append("b");
+        } else if (temp.compare("1100") == 0) {
+            result.append("c");
+        } else if (temp.compare("1101") == 0) {
+            result.append("d");
+        } else if (temp.compare("1110") == 0) {
+            result.append("e");
+        } else if (temp.compare("1111") == 0) {
+            result.append("f");
+        }
+
+
+    }
+
+    return result;
+
+}
+
+string intToChar(int a) {
+
+    if (a == 1)
+        return "1";
+    else return "0";
+}
+
 string GetBinaryStringFromHexString(string sHex) {
     string sReturn = "";
-    for (int i = 0; i < sHex.length(); ++i) {
+    for (int i = 0; i < sHex.length(); i++) {
         switch (sHex[i]) {
             case '0':
                 sReturn.append("0000");
@@ -451,154 +552,155 @@ string GetBinaryStringFromHexString(string sHex) {
 vector<string> sha_256(vector<int> input) {
 
     vector<int> paddingResult = padding(input);
+
     vector<Block> blocks = parsing(paddingResult);
+
     auto N = static_cast<int>(blocks.size());
-    vector<string> hashValues, k;
-    hashValues.emplace_back("6a09e668");
-    hashValues.emplace_back("bb67ae85");
-    hashValues.emplace_back("3c6ef372");
-    hashValues.emplace_back("a54ff53a");
-    hashValues.emplace_back("510e527f");
-    hashValues.emplace_back("9b05688c");
-    hashValues.emplace_back("1f83d9ab");
-    hashValues.emplace_back("5be0cd19");
+    vector<string> hashValues;
+    hashValues.push_back("6a09e667");
+    hashValues.push_back("bb67ae85");
+    hashValues.push_back("3c6ef372");
+    hashValues.push_back("a54ff53a");
+    hashValues.push_back("510e527f");
+    hashValues.push_back("9b05688c");
+    hashValues.push_back("1f83d9ab");
+    hashValues.push_back("5be0cd19");
 
     vector<int> a, b, c, d, e, f, g, h, t1, t2;
     vector<int> pre_a, pre_b, pre_c, pre_d, pre_e, pre_f, pre_g, pre_h;
 //        init variables
-    a = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[0])));
-    b = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[1])));
-    c = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[2])));
-    d = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[3])));
-    e = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[4])));
-    f = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[5])));
-    g = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[6])));
-    h = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[7])));
+    pre_a = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString("6a09e667")));
+    pre_b = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[1])));
+    pre_c = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[2])));
+    pre_d = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[3])));
+    pre_e = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[4])));
+    pre_f = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[5])));
+    pre_g = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[6])));
+    pre_h = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[7])));
 
 //    todo : initialize vector k
 
-    k.emplace_back("428a2f98");
-    k.emplace_back("71374491");
-    k.emplace_back("b5c0fbcf");
-    k.emplace_back("e9b5dba5");
-    k.emplace_back("3956c25b");
-    k.emplace_back("59f111f1");
-    k.emplace_back("923f82a4");
-    k.emplace_back("ab1c5ed5");
-
-    k.emplace_back("d807aa98");
-    k.emplace_back("12835b01");
-    k.emplace_back("243185be");
-    k.emplace_back("550c7dc3");
-    k.emplace_back("72be5d74");
-    k.emplace_back("80deb1fe");
-    k.emplace_back("9bdc06a7");
-    k.emplace_back("c19bf174");
-
-    k.emplace_back("e49b69c1");
-    k.emplace_back("efbe4786");
-    k.emplace_back("0fc19dc6");
-    k.emplace_back("240ca1cc");
-    k.emplace_back("2de92c6f");
-    k.emplace_back("4a7484aa");
-    k.emplace_back("5cb0a9dc");
-    k.emplace_back("76f988da");
-
-    k.emplace_back("983e5152");
-    k.emplace_back("a831c66d");
-    k.emplace_back("b00327c8");
-    k.emplace_back("bf597fc7");
-    k.emplace_back("c6e00bf3");
-    k.emplace_back("d5a79147");
-    k.emplace_back("06ca6341");
-    k.emplace_back("14292967");
-
-    k.emplace_back("27v70a85");
-    k.emplace_back("2e1b2138");
-    k.emplace_back("4d2c6dfc");
-    k.emplace_back("53380d13");
-    k.emplace_back("650a7354");
-    k.emplace_back("766a0abb");
-    k.emplace_back("81c2c92e");
-    k.emplace_back("92722c85");
-
-    k.emplace_back("a2bfe8a1");
-    k.emplace_back("a81a664b");
-    k.emplace_back("c24b8b70");
-    k.emplace_back("c76c51a3");
-    k.emplace_back("d192e819");
-    k.emplace_back("d6990624");
-    k.emplace_back("f40e3585");
-    k.emplace_back("106aa070");
-
-    k.emplace_back("19a4c116");
-    k.emplace_back("1e376c08");
-    k.emplace_back("2748774c");
-    k.emplace_back("34b0bcb5");
-    k.emplace_back("391c0cb3");
-    k.emplace_back("4ed8aa4a");
-    k.emplace_back("5b9cca4f");
-    k.emplace_back("682e6ff3");
-
-    k.emplace_back("748f82ee");
-    k.emplace_back("78a563f");
-    k.emplace_back("84c87814");
-    k.emplace_back("8cc70208");
-    k.emplace_back("90befffa");
-    k.emplace_back("a4506ceb");
-    k.emplace_back("bef9a3f7");
-    k.emplace_back("c67178f2");
+    static const string k[64] = {
+            "428a2f98", "71374491", "b5c0fbcf", "e9b5dba5", "3956c25b", "59f111f1", "923f82a4", "ab1c5ed5",
+            "d807aa98", "12835b01", "243185be", "550c7dc3", "72be5d74", "80deb1fe", "9bdc06a7", "c19bf174",
+            "e49b69c1", "efbe4786", "0fc19dc6", "240ca1cc", "2de92c6f", "4a7484aa", "5cb0a9dc", "76f988da",
+            "983e5152", "a831c66d", "b00327c8", "bf597fc7", "c6e00bf3", "d5a79147", "06ca6351", "14292967",
+            "27b70a85", "2e1b2138", "4d2c6dfc", "53380d13", "650a7354", "766a0abb", "81c2c92e", "92722c85",
+            "a2bfe8a1", "a81a664b", "c24b8b70", "c76c51a3", "d192e819", "d6990624", "f40e3585", "106aa070",
+            "19a4c116", "1e376c08", "2748774c", "34b0bcb5", "391c0cb3", "4ed8aa4a", "5b9cca4f", "682e6ff3",
+            "748f82ee", "78a5636f", "84c87814", "8cc70208", "90befffa", "a4506ceb", "bef9a3f7", "c67178f2"
+    };
 
 
     for (int i = 0; i < N; i++) {
 
-
-        pre_a = a;
-        pre_b = b;
-        pre_c = c;
-        pre_d = d;
-        pre_e = e;
-        pre_f = f;
-        pre_g = g;
-        pre_h = h;
+        a = pre_a;
+        b = pre_b;
+        c = pre_c;
+        d = pre_d;
+        e = pre_e;
+        f = pre_f;
+        g = pre_g;
+        h = pre_h;
         vector<Block> w = expansion(blocks[i]);
 
 
         for (int j = 0; j < 64; j++) {
 
+
             vector<int> chv = ch(e, f, g);
             vector<int> majv = maj(a, b, c);
-            bigSimga0(a);
+            vector<int> sg0 = bigSimga0(a);
+            vector<int> sg1 = bigSimga1(e);
+            vector<int> sg2 = bigSimga2(add(c,d));
             vector<int> k_int = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(k[j])));
-            t1 = add(add(add(h, bigSimga1(e)), add(ch(e, f, g), k_int)), w[j].data);
-            t2 = add(bigSimga0(a), maj(a, b, c));
+            t2 = add(add(add(h, sg1), chv), add(k_int, w[j].data));
+            t1 = add(add(sg0, majv), sg2);
             h = g;
-            g = f;
             f = e;
-            e = add(d, t1);
             d = c;
-            c = b;
             b = a;
-            a = add(t1, t2);
+            g = f;
+            e = add(t1, d);
+            c = b;
+            a = sub(multiply(3,t1) , t2);
+
+
+
+
         }
 
 //         updating has values
 
 
-        a = add(a, pre_a);
-        b = add(b, pre_b);
-        c = add(c, pre_c);
-        d = add(d, pre_d);
-        e = add(e, pre_e);
-        f = add(f, pre_f);
-        g = add(g, pre_g);
-        h = add(h, pre_h);
-        for (int l = 0; l < a.size(); ++l) {
-            cout << a[l];
 
-        }
+        pre_a = add(a, pre_a);
+        pre_b = add(b, pre_b);
+        pre_c = add(c, pre_c);
+        pre_d = add(d, pre_d);
+        pre_e = add(e, pre_e);
+        pre_f = add(f, pre_f);
+        pre_g = add(g, pre_g);
+        pre_h = add(h, pre_h);
+
 
     }
+
+
+    a = pre_a;
+    b = pre_b;
+    c = pre_c;
+    d = pre_d;
+    e = pre_e;
+    f = pre_f;
+    g = pre_g;
+    h = pre_h;
+
+
+    string res = binToHex(a);
+    res.append(binToHex(b));
+    res.append(binToHex(c));
+    res.append(binToHex(d));
+    res.append(binToHex(e));
+    res.append(binToHex(f));
+    res.append(binToHex(g));
+    res.append(binToHex(h));
+
+    cout<<res<<endl;
+
+
+//    for (int l = 0; l < b.size(); l++) {
+//        cout << b[l];
+//
+//    }
+//
+//    for (int l = 0; l < c.size(); l++) {
+//        cout << c[l];
+//
+//    }
+//
+//    for (int l = 0; l < d.size(); l++) {
+//        cout << d[l];
+//
+//    }
+//
+//    for (int l = 0; l < e.size(); l++) {
+//        cout << e[l];
+//
+//    }
+//
+//    for (int l = 0; l < f.size(); l++) {
+//        cout << f[l];
+//
+//    }
+//    for (int l = 0; l < g.size(); l++) {
+//        cout << g[l];
+//
+//    }
+//    for (int l = 0; l < h.size(); l++) {
+//        cout << h[l];
+
+//    }
 
 
 //    TODO : update hashvalues : convert a-b-c-d-e-f-g-h to hex String and put them in the hashvalues vector
@@ -613,7 +715,8 @@ vector<int> bigSimga0(vector<int> x) {
     vector<int> result, temp1, temp2;
     temp1 = XOR(ROT(x, 2), ROT(x, 13));
     temp2 = XOR(ROT(x, 22), SHF(x, 7));
-    result = XOR(temp1, temp2);
+    result = XOR ( temp1, temp2);
+//    result = XOR(temp1, ROT(x, 22));
     return result;
 
 
@@ -643,7 +746,7 @@ vector<int> bigSimga2(vector<int> x) {
 
 vector<int> ch(vector<int> x, vector<int> y, vector<int> z) {
     vector<int> temp1, res;
-    temp1 = XOR(andGate(x, y), andGate(notGate(y), z));
+    temp1= XOR(andGate(x, y), andGate(notGate(y), z));
     res = XOR(temp1, andGate(notGate(x), z));
     return res;
 }
@@ -651,7 +754,7 @@ vector<int> ch(vector<int> x, vector<int> y, vector<int> z) {
 vector<int> maj(vector<int> x, vector<int> y, vector<int> z) {
 
     vector<int> temp1, res;
-    temp1 = XOR(andGate(x, z), andGate(x, z));
+    temp1 = XOR(andGate(x, y), andGate(x, z));
 
     res = XOR(temp1, andGate(y, z));
 
@@ -665,15 +768,17 @@ vector<int> andGate(vector<int> x, vector<int> y) {
 
     vector<int> result;
 
-    for (int i = 0; i < min(x.size(), y.size()); i++) {
+    int minSize = min(x.size(), y.size());
+    std::reverse(x.begin(), x.end());
+    std::reverse(y.begin(), y.end());
+
+    for (int i = 0; i < minSize; i++) {
 
         result.push_back(x[i] & y[i]);
-
     }
 
+    std::reverse(result.begin(), result.end());
     return result;
-
-
 }
 
 vector<int> notGate(vector<int> x) {
@@ -696,6 +801,8 @@ vector<int> bitsetToVecInt(bitset<32> b) {
         res.push_back((int) b[i]);
 
     }
+
+    std::reverse(res.begin(), res.end());
     return res;
 
 }
@@ -707,9 +814,23 @@ vector<int> bitsetToVecInt(bitset<8> b) {
         res.push_back((int) b[i]);
 
     }
+    std::reverse(res.begin(), res.end());
     return res;
 
 }
+
+vector<int> bitsetToVecInt(bitset<64> b) {
+
+    vector<int> res;
+    for (int i = 0; i < b.size(); i++) {
+        res.push_back((int) b[i]);
+
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+
+}
+
 
 vector<int> strToBinary(string txt) {
 
@@ -717,14 +838,40 @@ vector<int> strToBinary(string txt) {
     for (int i = 0; i < txt.size(); i++) {
 
         vector<int> tmp = bitsetToVecInt(bitset<8>(txt[i]));
-        for (int j = 0; j < tmp.size(); ++j) {
+
+
+        for (int j = 0; j < tmp.size(); j++) {
             result.push_back(tmp[j]);
 
         }
+
     }
+
 
     return result;
 
 }
 
+vector<int> multiply(int  n , vector<int> x){
 
+    vector<int> res = x;
+
+    for (int i = 0; i < n -1; ++i) {
+
+        res =add(res,x);
+
+    }
+    return res;
+
+}
+
+vector<int> sub ( vector<int> x , vector<int> y ){
+    vector<int> res ;
+    vector<int> one ;
+    for( int i = 0 ; i< y.size() - 1 ; i++)
+        one.push_back(0);
+    one.push_back(1);
+    res = add( x , add(notGate(y) ,one ));
+
+    return res;
+}
