@@ -2,25 +2,24 @@
 #include <vector>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
+#include <bitset>
 
+
+#define version "02000000"
+#define prev_block "17975b97c18ed1f7e255adf297599b55330edab87803c8170100000000000000"
+#define time_stamp "358b0553"
+#define diff "5350f119"
+#define target  "00000000000002816E0000000000000000000000000000000000000000000000"
+static int hash = 1;
+static int nonce = 0;
 
 using namespace std;
 
-class Block_Header {
-    int version[32];
-    int hashPrevBlock[512];
-    int hashMerkelRoot[512];
-    int time[32];
-    int difficulty[32];
-    int nonce[32];
-
-};
 
 class Block {
 public :
     vector<int> data;
-//    Block_Header header;
-
 };
 
 
@@ -35,20 +34,9 @@ vector<Block> parsing(vector<int> input);
 
 vector<Block> expansion(Block block);
 
-vector<string> sha_256(vector<int> input);
-
-vector<Block> preprocess(string txt);
-
-string Bin2Hex(const string &s);
-
+string  sha_256(vector<int> input);
 
 // 2 -- helping methods
-
-vector<int> strToBinary(string txt);
-
-string GetBinaryStringFromHexString(string sHex);
-
-
 Block ROT(Block block, int n);
 
 vector<int> ROT(vector<int> block, int n);
@@ -67,15 +55,6 @@ vector<int> bigSimga1(vector<int> x);
 
 vector<int> bigSimga2(vector<int> x);
 
-Block XOR(Block block1, Block block2);
-
-vector<int> XOR(vector<int> block1, vector<int> block2);
-
-Block add(Block block1, Block block2);
-
-vector<int> add(vector<int> block1, vector<int> block2);
-
-
 vector<int> ch(vector<int> x, vector<int> y, vector<int> z);
 
 vector<int> maj(vector<int> x, vector<int> y, vector<int> z);
@@ -84,41 +63,95 @@ vector<int> andGate(vector<int> x, vector<int> y);
 
 vector<int> notGate(vector<int> x);
 
-vector<int> bitsetToVecInt(bitset<32> b);
+vector<int> XOR(vector<int> block1, vector<int> block2);
+
+Block XOR(Block block1, Block block2);
 
 vector<int> bitsetToVecInt(bitset<8> b);
 
+vector<int> bitsetToVecInt(bitset<32> b);
+
 vector<int> bitsetToVecInt(bitset<64> b);
 
+vector<int> bitsetToVecInt(bitset<640> b);
+
 vector<int> multiply(int  n , vector<int> x);
-vector<int> sub ( vector<int> x , vector<int> y );
+
+vector<int> sub ( vector<int> x , vector<int> y);
+
+Block add(Block block1, Block block2);
+
+vector<int> add(vector<int> block1, vector<int> block2);
+
+vector<int> updateNumber(int size , vector<int> number);
+
+string binToHex(vector<int> binArr);
+
+vector<int> strToBinary(string txt);
+
+string hexToBin(string sHex);
+
 string intToChar(int a);
+
+bool lessThan( bitset<256> b1, bitset<256> b2);
 
 static int numberOfBlocks;
 
 int main() {
 
+    string merkel_root =  sha_256(strToBinary("abcd"));
 
-    sha_256(strToBinary("abc"));
+    cout<<merkel_root<<endl;
 
-    vector<int> a, b;
-    a.push_back(1);
-    a.push_back(1);
-    a.push_back(1);
-    a.push_back(0);
+    string block_hedear = "";
+    block_hedear.append(version);
+    block_hedear.append(prev_block);
+    block_hedear.append(merkel_root);
+    block_hedear.append(time_stamp);
+    block_hedear.append(diff);
+    block_hedear.append("00000000");
 
-    b.push_back(1);
-    b.push_back(1);
-    b.push_back(0);
-    b.push_back(0);
-    b.push_back(0);
+    vector<int> input = bitsetToVecInt(bitset<640>(hexToBin(block_hedear)));
 
-    a = SHF(a, 3);
+    vector<int> nonce ;
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(0);
+    nonce.push_back(1);
+
+    cout<<" "<<endl;
+    vector<int> ad = sub(add(nonce,nonce),nonce);
+    ad = multiply(2,nonce);
+    for (int i = 0; i < ad.size(); ++i) {
+
+        cout<<ad[i]<<endl;
+    }
+
+//    vector<int> res = add(input,updateNumber(640,nonce));
+//    cout<<res.size()<<endl;
+//    string hashResult = "1";
+//      string tempHash = sha_256( add(input,nonce));
+//         hashResult  = sha_256(    bitsetToVecInt(bitset<640>(hexToBin(   tempHash   )))       );
+//cout<<bitset<256>(hexToBin (hashResult)).si<<endl;
+//cout<<bitset<256>(hexToBin (hashResult)).to_ullong()<<endl;
+//cout<<bitset<256>(hexToBin(target))<<endl;
+//cout<<lessThan(bitset<256>(hexToBin(hashResult))   , bitset<256>(hexToBin(target))  )<<endl;
+//    while(   lessThan(bitset<256>(hexToBin(hashResult))   , bitset<256>(hexToBin(target))  ) == false    ){
+//        cout<<bitset<256>(hexToBin(hashResult))<<endl;
 //
-//    for (int i = 0; i < a.size(); ++i) {
-//        cout<<a[i];
+//        cout<<"hello" <<endl;
+//        string tempHash = sha_256( add(input,nonce));
+//         hashResult  = sha_256(    bitsetToVecInt(bitset<640>(hexToBin(   tempHash   )))       );
+//        vector<int> one;
+//        one.push_back(1);
+//     nonce =     add(nonce, updateNumber(nonce.size(),one));
 //    }
-//
+
+//    cout<<hashResult<<endl;
 
 
     return 0;
@@ -247,11 +280,7 @@ Block SHF(Block block, int n) {
         block.data[j] = 0;
 
     }
-
-
     return block;
-
-
 }
 
 vector<int> SHF(vector<int> block, int n) {
@@ -280,6 +309,7 @@ vector<int> SHF(vector<int> block, int n) {
 
 vector<Block> expansion(Block block) {
 
+
     vector<Block> blocks;
 
     for (int i = 0; i < 16; i++) {
@@ -291,7 +321,8 @@ vector<Block> expansion(Block block) {
             b.data.push_back(block.data[j]);
 
         }
-        std::reverse(b.data.begin(), b.data.end());
+
+//        std::reverse(b.data.begin(), b.data.end());
         blocks.push_back(b);
 
     }
@@ -304,12 +335,37 @@ vector<Block> expansion(Block block) {
 
         Block temp1 = add(sigma1(blocks[i - 1]), blocks[i - 6]);
         Block temp2 = add(sigma0(blocks[i - 12]), blocks[i - 15]);
+//standard :
+//        Block temp1 = add(sigma1(blocks[i - 2]), blocks[i - 7]);
+//        Block temp2 = add(sigma0(blocks[i - 15]), blocks[i - 16]);
+
 
         b = add(temp1, temp2);
-        std::reverse(b.data.begin(), b.data.end());
+//        std::reverse(b.data.begin(), b.data.end());
         blocks.push_back(b);
     }
 
+
+    for (int k = 0; k < blocks.size(); ++k) {
+
+        Block  b = blocks[k];
+        vector<int> temp ;
+        for (int k = b.data.size() - 1; k >=24 ; k--) {
+            temp.push_back(b.data[k]);
+        }
+
+        for (int k = 16; k <=23 ; k++) {
+            temp.push_back(b.data[k]);
+        }
+        for (int k = 15; k >=0 ; k--) {
+            temp.push_back(b.data[k]);
+        }
+        b.data = temp;
+        blocks[k] = b;
+//                std::reverse(b.data.begin(), b.data.end());
+//blocks[k] = b;
+
+    }
 
     return blocks;
 }
@@ -416,9 +472,16 @@ vector<int> add(vector<int> block1, vector<int> block2) {
 Block sigma0(Block block) {
 
     Block result;
-
+//
     Block temp = XOR(ROT(block, 17), ROT(block, 14));
     result = XOR(temp, SHF(block, 12));
+//
+//    standard
+
+
+//    Block temp = XOR(ROT(block, 7), ROT(block, 18));
+//    result = XOR(temp, SHF(block, 3));
+
     return result;
 
 
@@ -432,6 +495,12 @@ Block sigma1(Block block) {
     Block temp = XOR(ROT(block, 9), ROT(block, 19));
 
     result = XOR(temp, SHF(block, 9));
+
+//    standard :
+//     temp = XOR(ROT(block, 17), ROT(block, 19));
+//
+//    result = XOR(temp, SHF(block, 10));
+
     return result;
 }
 
@@ -492,7 +561,7 @@ string intToChar(int a) {
     else return "0";
 }
 
-string GetBinaryStringFromHexString(string sHex) {
+string hexToBin(string sHex) {
     string sReturn = "";
     for (int i = 0; i < sHex.length(); i++) {
         switch (sHex[i]) {
@@ -549,7 +618,7 @@ string GetBinaryStringFromHexString(string sHex) {
     return sReturn;
 }
 
-vector<string> sha_256(vector<int> input) {
+string sha_256(vector<int> input) {
 
     vector<int> paddingResult = padding(input);
 
@@ -569,26 +638,25 @@ vector<string> sha_256(vector<int> input) {
     vector<int> a, b, c, d, e, f, g, h, t1, t2;
     vector<int> pre_a, pre_b, pre_c, pre_d, pre_e, pre_f, pre_g, pre_h;
 //        init variables
-    pre_a = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString("6a09e667")));
-    pre_b = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[1])));
-    pre_c = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[2])));
-    pre_d = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[3])));
-    pre_e = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[4])));
-    pre_f = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[5])));
-    pre_g = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[6])));
-    pre_h = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(hashValues[7])));
+    pre_a = bitsetToVecInt(bitset<32>(hexToBin("6a09e667")));
+    pre_b = bitsetToVecInt(bitset<32>(hexToBin(hashValues[1])));
+    pre_c = bitsetToVecInt(bitset<32>(hexToBin(hashValues[2])));
+    pre_d = bitsetToVecInt(bitset<32>(hexToBin(hashValues[3])));
+    pre_e = bitsetToVecInt(bitset<32>(hexToBin(hashValues[4])));
+    pre_f = bitsetToVecInt(bitset<32>(hexToBin(hashValues[5])));
+    pre_g = bitsetToVecInt(bitset<32>(hexToBin(hashValues[6])));
+    pre_h = bitsetToVecInt(bitset<32>(hexToBin(hashValues[7])));
 
 //    todo : initialize vector k
 
-    static const string k[64] = {
-            "428a2f98", "71374491", "b5c0fbcf", "e9b5dba5", "3956c25b", "59f111f1", "923f82a4", "ab1c5ed5",
-            "d807aa98", "12835b01", "243185be", "550c7dc3", "72be5d74", "80deb1fe", "9bdc06a7", "c19bf174",
-            "e49b69c1", "efbe4786", "0fc19dc6", "240ca1cc", "2de92c6f", "4a7484aa", "5cb0a9dc", "76f988da",
-            "983e5152", "a831c66d", "b00327c8", "bf597fc7", "c6e00bf3", "d5a79147", "06ca6351", "14292967",
-            "27b70a85", "2e1b2138", "4d2c6dfc", "53380d13", "650a7354", "766a0abb", "81c2c92e", "92722c85",
-            "a2bfe8a1", "a81a664b", "c24b8b70", "c76c51a3", "d192e819", "d6990624", "f40e3585", "106aa070",
-            "19a4c116", "1e376c08", "2748774c", "34b0bcb5", "391c0cb3", "4ed8aa4a", "5b9cca4f", "682e6ff3",
-            "748f82ee", "78a5636f", "84c87814", "8cc70208", "90befffa", "a4506ceb", "bef9a3f7", "c67178f2"
+    static const string k[64] = {"428a2f98","71374491","b5c0fbcf","e9b5dba5","3956c25b","59f111f1","923f82a4","ab1c5ed5",
+                                 "d807aa98","12835b01","243185be","550c7dc3","72be5d74","80deb1fe","9bdc06a7","c19bf174",
+                                 "e49b69c1","efbe4786","0fc19dc6","240ca1cc","2de92c6f","4a7484aa","5cb0a9dc","76f988da",
+                                 "983e5152","a831c66d","b00327c8","bf597fc7","c6e00bf3","d5a79147","06ca6351","14292967",
+                                 "27b70a85","2e1b2138","4d2c6dfc","53380d13","650a7354","766a0abb","81c2c92e","92722c85",
+                                 "a2bfe8a1","a81a664b","c24b8b70","c76c51a3","d192e819","d6990624","f40e3585","106aa070",
+                                 "19a4c116","1e376c08","2748774c","34b0bcb5","391c0cb3","4ed8aa4a","5b9cca4f","682e6ff3",
+                                 "748f82ee","78a5636f","84c87814","8cc70208","90befffa","a4506ceb","bef9a3f7","c67178f2"
     };
 
 
@@ -613,7 +681,7 @@ vector<string> sha_256(vector<int> input) {
             vector<int> sg0 = bigSimga0(a);
             vector<int> sg1 = bigSimga1(e);
             vector<int> sg2 = bigSimga2(add(c,d));
-            vector<int> k_int = bitsetToVecInt(bitset<32>(GetBinaryStringFromHexString(k[j])));
+            vector<int> k_int = bitsetToVecInt(bitset<32>(hexToBin(k[j])));
             t2 = add(add(add(h, sg1), chv), add(k_int, w[j].data));
             t1 = add(add(sg0, majv), sg2);
             h = g;
@@ -621,13 +689,25 @@ vector<string> sha_256(vector<int> input) {
             d = c;
             b = a;
             g = f;
-            e = add(t1, d);
+            e = add(d,t1);
             c = b;
-            a = sub(multiply(3,t1) , t2);
+            vector<int>tempo = multiply(3,t1);
+            a = sub(tempo, t2);
 
 
 
+//        standard :
 
+//        t1 = add(add(add(h,sg1),chv ), add(k_int, w[j].data)     );
+//        t2 = add( sg0 ,majv  );
+//        h=g;
+//        g=f;
+//        f=e;
+//        e=add(d,t1);
+//        d=c;
+//        c=b;
+//        b=a;
+//        a =add(t1,t2);
         }
 
 //         updating has values
@@ -656,7 +736,6 @@ vector<string> sha_256(vector<int> input) {
     g = pre_g;
     h = pre_h;
 
-
     string res = binToHex(a);
     res.append(binToHex(b));
     res.append(binToHex(c));
@@ -666,57 +745,27 @@ vector<string> sha_256(vector<int> input) {
     res.append(binToHex(g));
     res.append(binToHex(h));
 
-    cout<<res<<endl;
 
 
-//    for (int l = 0; l < b.size(); l++) {
-//        cout << b[l];
-//
-//    }
-//
-//    for (int l = 0; l < c.size(); l++) {
-//        cout << c[l];
-//
-//    }
-//
-//    for (int l = 0; l < d.size(); l++) {
-//        cout << d[l];
-//
-//    }
-//
-//    for (int l = 0; l < e.size(); l++) {
-//        cout << e[l];
-//
-//    }
-//
-//    for (int l = 0; l < f.size(); l++) {
-//        cout << f[l];
-//
-//    }
-//    for (int l = 0; l < g.size(); l++) {
-//        cout << g[l];
-//
-//    }
-//    for (int l = 0; l < h.size(); l++) {
-//        cout << h[l];
-
-//    }
 
 
-//    TODO : update hashvalues : convert a-b-c-d-e-f-g-h to hex String and put them in the hashvalues vector
-
-    return hashValues;
+    return res ;
 
 
 }
 
 vector<int> bigSimga0(vector<int> x) {
-
+//
     vector<int> result, temp1, temp2;
     temp1 = XOR(ROT(x, 2), ROT(x, 13));
     temp2 = XOR(ROT(x, 22), SHF(x, 7));
     result = XOR ( temp1, temp2);
+//
+
+////        sha-256 standard :
+//    temp1 = XOR(ROT(x, 2), ROT(x, 13));
 //    result = XOR(temp1, ROT(x, 22));
+
     return result;
 
 
@@ -728,6 +777,9 @@ vector<int> bigSimga1(vector<int> x) {
     vector<int> result, temp1;
     temp1 = XOR(ROT(x, 6), ROT(x, 11));
     result = XOR(temp1, ROT(x, 25));
+
+
+
     return result;
 
 
@@ -748,13 +800,18 @@ vector<int> ch(vector<int> x, vector<int> y, vector<int> z) {
     vector<int> temp1, res;
     temp1= XOR(andGate(x, y), andGate(notGate(y), z));
     res = XOR(temp1, andGate(notGate(x), z));
+
+//    standard :
+//    res= XOR(andGate(x, y), andGate(notGate(x), z));
+
+
     return res;
 }
 
 vector<int> maj(vector<int> x, vector<int> y, vector<int> z) {
 
     vector<int> temp1, res;
-    temp1 = XOR(andGate(x, y), andGate(x, z));
+    temp1 = XOR(andGate(x, z), andGate(x, y));
 
     res = XOR(temp1, andGate(y, z));
 
@@ -819,6 +876,18 @@ vector<int> bitsetToVecInt(bitset<8> b) {
 
 }
 
+vector<int> bitsetToVecInt(bitset<640> b) {
+
+    vector<int> res;
+    for (int i = 0; i < b.size(); i++) {
+        res.push_back((int) b[i]);
+
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+
+}
+
 vector<int> bitsetToVecInt(bitset<64> b) {
 
     vector<int> res;
@@ -871,7 +940,40 @@ vector<int> sub ( vector<int> x , vector<int> y ){
     for( int i = 0 ; i< y.size() - 1 ; i++)
         one.push_back(0);
     one.push_back(1);
+
     res = add( x , add(notGate(y) ,one ));
+//    res = add(x,notGate(y));
+
+    return res;
+}
+vector<int> updateNumber( int size , vector<int> number){
+
+while ( number.size() <= size){
+
+    number.insert(number.begin(),0);
+
+}
+
+
+    return  number;
+}
+
+bool lessThan( bitset<256> b1, bitset<256> b2){
+
+    bool res = false;
+    bool flag = false;
+    for (int i = 0; i < b1.size(); ++i) {
+
+        if ( flag )
+            break;
+
+        if ( b1[i] < b2[i] )
+        {
+            res = true;
+            flag = true;
+            break;
+        }
+    }
 
     return res;
 }
