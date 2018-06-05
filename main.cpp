@@ -4,7 +4,11 @@
 #include <sstream>
 #include <algorithm>
 #include <bitset>
-
+#include <chrono>
+#include <windows.h>
+#include <time.h>
+#include <math.h>
+#include <psapi.h>
 
 #define version "02000000"
 #define prev_block "17975b97c18ed1f7e255adf297599b55330edab87803c8170100000000000000"
@@ -21,7 +25,6 @@ class Block {
 public :
     vector<int> data;
 };
-
 
 
 // method declaration :
@@ -97,11 +100,55 @@ bool lessThan(bitset<256> b1, bitset<256> b2);
 
 static int numberOfBlocks;
 
+static ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
+static int numProcessors;
+static HANDLE self;
+
+void init(){
+    SYSTEM_INFO sysInfo;
+    FILETIME ftime, fsys, fuser;
+    GetSystemInfo(&sysInfo);
+    numProcessors = sysInfo.dwNumberOfProcessors;
+    GetSystemTimeAsFileTime(&ftime);
+    memcpy(&lastCPU, &ftime, sizeof(FILETIME));
+    self = GetCurrentProcess();
+    GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
+    memcpy(&lastSysCPU, &fsys, sizeof(FILETIME));
+    memcpy(&lastUserCPU, &fuser, sizeof(FILETIME));
+}
+
+double Cpu(){
+    FILETIME ftime, fsys, fuser;
+    ULARGE_INTEGER now, sys, user;
+    double percent;
+    GetSystemTimeAsFileTime(&ftime);
+    memcpy(&now, &ftime, sizeof(FILETIME));
+    GetProcessTimes(self, &ftime, &ftime, &fsys, &fuser);
+    memcpy(&sys, &fsys, sizeof(FILETIME));
+    memcpy(&user, &fuser, sizeof(FILETIME));
+    percent = (sys.QuadPart - lastSysCPU.QuadPart) +
+              (user.QuadPart - lastUserCPU.QuadPart);
+    percent /= (now.QuadPart - lastCPU.QuadPart);
+    percent /= numProcessors;
+    lastCPU = now;
+    lastUserCPU = user;
+    lastSysCPU = sys;
+    return percent * 100;
+}
+
+SIZE_T Memory(){
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    return pmc.PrivateUsage;
+}
+
 int main() {
 
-    string merkel_root = sha_256(strToBinary("abcd"));
+    init();
 
+    clock_t firstSeconds =  clock();
 
+    string merkel_root =  sha_256(strToBinary("abcd"));
 
     string block_hedear = "";
     block_hedear.append(version);
@@ -141,11 +188,20 @@ int main() {
     cout<<hashResult<<endl;
 
 
+    clock_t secondSeconds =  clock();
+
+    printf("\n\n%f seconds \n%f MB \n%f cpu percentage\n",
+           ((float)secondSeconds - (float)firstSeconds)/1000.0, Memory()/1000000.0 , Cpu());
+
     return 0;
 }
 
 vector<int> padding(vector<int> input) {
 
+//    for (int j = 0; j < input.size(); ++j) {
+//        cout<<input[j];
+//    }
+//cout<<" " << endl;
     int size = input.size();
 
     vector<int> tmpInput = input;
@@ -765,6 +821,7 @@ vector<int> bigSimga1(vector<int> x) {
     vector<int> result, temp1;
     temp1 = XOR(ROT(x, 6), ROT(x, 11));
     result = XOR(temp1, ROT(x, 25));
+
 
 
     return result;
