@@ -34,7 +34,7 @@ vector<Block> parsing(vector<int> input);
 
 vector<Block> expansion(Block block);
 
-string  sha_256(vector<int> input);
+string sha_256(vector<int> input);
 
 // 2 -- helping methods
 Block ROT(Block block, int n);
@@ -75,15 +75,15 @@ vector<int> bitsetToVecInt(bitset<64> b);
 
 vector<int> bitsetToVecInt(bitset<640> b);
 
-vector<int> multiply(int  n , vector<int> x);
+vector<int> multiply(int n, vector<int> x);
 
-vector<int> sub ( vector<int> x , vector<int> y);
+vector<int> sub(vector<int> x, vector<int> y);
 
 Block add(Block block1, Block block2);
 
 vector<int> add(vector<int> block1, vector<int> block2);
 
-vector<int> updateNumber(int size , vector<int> number);
+vector<int> updateNumber(int size, vector<int> number);
 
 string binToHex(vector<int> binArr);
 
@@ -93,15 +93,15 @@ string hexToBin(string sHex);
 
 string intToChar(int a);
 
-bool lessThan( bitset<256> b1, bitset<256> b2);
+bool lessThan(bitset<256> b1, bitset<256> b2);
 
 static int numberOfBlocks;
 
 int main() {
 
-    string merkel_root =  sha_256(strToBinary("abcd"));
+    string merkel_root = sha_256(strToBinary("abcd"));
 
-    cout<<merkel_root<<endl;
+
 
     string block_hedear = "";
     block_hedear.append(version);
@@ -113,7 +113,7 @@ int main() {
 
     vector<int> input = bitsetToVecInt(bitset<640>(hexToBin(block_hedear)));
 
-    vector<int> nonce ;
+    vector<int> nonce;
     nonce.push_back(0);
     nonce.push_back(0);
     nonce.push_back(0);
@@ -122,36 +122,23 @@ int main() {
     nonce.push_back(0);
     nonce.push_back(0);
     nonce.push_back(1);
+    vector<int> one;
+    one.push_back(1);
 
-    cout<<" "<<endl;
-    vector<int> ad = sub(add(nonce,nonce),nonce);
-    ad = multiply(2,nonce);
-    for (int i = 0; i < ad.size(); ++i) {
 
-        cout<<ad[i]<<endl;
+    vector<int> res = add(input, updateNumber(640, nonce));
+
+    string hashResult = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+    while (lessThan(bitset<256>(hexToBin(hashResult)), bitset<256>(hexToBin(target))) == false) {
+
+        string tempHash = sha_256(add(input, nonce));
+        hashResult = sha_256(bitsetToVecInt(bitset<640>(hexToBin(tempHash))));
+
+        nonce = add(nonce, updateNumber(nonce.size(), one));
     }
 
-//    vector<int> res = add(input,updateNumber(640,nonce));
-//    cout<<res.size()<<endl;
-//    string hashResult = "1";
-//      string tempHash = sha_256( add(input,nonce));
-//         hashResult  = sha_256(    bitsetToVecInt(bitset<640>(hexToBin(   tempHash   )))       );
-//cout<<bitset<256>(hexToBin (hashResult)).si<<endl;
-//cout<<bitset<256>(hexToBin (hashResult)).to_ullong()<<endl;
-//cout<<bitset<256>(hexToBin(target))<<endl;
-//cout<<lessThan(bitset<256>(hexToBin(hashResult))   , bitset<256>(hexToBin(target))  )<<endl;
-//    while(   lessThan(bitset<256>(hexToBin(hashResult))   , bitset<256>(hexToBin(target))  ) == false    ){
-//        cout<<bitset<256>(hexToBin(hashResult))<<endl;
-//
-//        cout<<"hello" <<endl;
-//        string tempHash = sha_256( add(input,nonce));
-//         hashResult  = sha_256(    bitsetToVecInt(bitset<640>(hexToBin(   tempHash   )))       );
-//        vector<int> one;
-//        one.push_back(1);
-//     nonce =     add(nonce, updateNumber(nonce.size(),one));
-//    }
-
-//    cout<<hashResult<<endl;
+    cout<<hashResult<<endl;
 
 
     return 0;
@@ -159,10 +146,6 @@ int main() {
 
 vector<int> padding(vector<int> input) {
 
-//    for (int j = 0; j < input.size(); ++j) {
-//        cout<<input[j];
-//    }
-//cout<<" " << endl;
     int size = input.size();
 
     vector<int> tmpInput = input;
@@ -348,16 +331,16 @@ vector<Block> expansion(Block block) {
 
     for (int k = 0; k < blocks.size(); ++k) {
 
-        Block  b = blocks[k];
-        vector<int> temp ;
-        for (int k = b.data.size() - 1; k >=24 ; k--) {
+        Block b = blocks[k];
+        vector<int> temp;
+        for (int k = b.data.size() - 1; k >= 24; k--) {
             temp.push_back(b.data[k]);
         }
 
-        for (int k = 16; k <=23 ; k++) {
+        for (int k = 16; k <= 23; k++) {
             temp.push_back(b.data[k]);
         }
-        for (int k = 15; k >=0 ; k--) {
+        for (int k = 15; k >= 0; k--) {
             temp.push_back(b.data[k]);
         }
         b.data = temp;
@@ -649,14 +632,22 @@ string sha_256(vector<int> input) {
 
 //    todo : initialize vector k
 
-    static const string k[64] = {"428a2f98","71374491","b5c0fbcf","e9b5dba5","3956c25b","59f111f1","923f82a4","ab1c5ed5",
-                                 "d807aa98","12835b01","243185be","550c7dc3","72be5d74","80deb1fe","9bdc06a7","c19bf174",
-                                 "e49b69c1","efbe4786","0fc19dc6","240ca1cc","2de92c6f","4a7484aa","5cb0a9dc","76f988da",
-                                 "983e5152","a831c66d","b00327c8","bf597fc7","c6e00bf3","d5a79147","06ca6351","14292967",
-                                 "27b70a85","2e1b2138","4d2c6dfc","53380d13","650a7354","766a0abb","81c2c92e","92722c85",
-                                 "a2bfe8a1","a81a664b","c24b8b70","c76c51a3","d192e819","d6990624","f40e3585","106aa070",
-                                 "19a4c116","1e376c08","2748774c","34b0bcb5","391c0cb3","4ed8aa4a","5b9cca4f","682e6ff3",
-                                 "748f82ee","78a5636f","84c87814","8cc70208","90befffa","a4506ceb","bef9a3f7","c67178f2"
+    static const string k[64] = {"428a2f98", "71374491", "b5c0fbcf", "e9b5dba5", "3956c25b", "59f111f1", "923f82a4",
+                                 "ab1c5ed5",
+                                 "d807aa98", "12835b01", "243185be", "550c7dc3", "72be5d74", "80deb1fe", "9bdc06a7",
+                                 "c19bf174",
+                                 "e49b69c1", "efbe4786", "0fc19dc6", "240ca1cc", "2de92c6f", "4a7484aa", "5cb0a9dc",
+                                 "76f988da",
+                                 "983e5152", "a831c66d", "b00327c8", "bf597fc7", "c6e00bf3", "d5a79147", "06ca6351",
+                                 "14292967",
+                                 "27b70a85", "2e1b2138", "4d2c6dfc", "53380d13", "650a7354", "766a0abb", "81c2c92e",
+                                 "92722c85",
+                                 "a2bfe8a1", "a81a664b", "c24b8b70", "c76c51a3", "d192e819", "d6990624", "f40e3585",
+                                 "106aa070",
+                                 "19a4c116", "1e376c08", "2748774c", "34b0bcb5", "391c0cb3", "4ed8aa4a", "5b9cca4f",
+                                 "682e6ff3",
+                                 "748f82ee", "78a5636f", "84c87814", "8cc70208", "90befffa", "a4506ceb", "bef9a3f7",
+                                 "c67178f2"
     };
 
 
@@ -680,7 +671,7 @@ string sha_256(vector<int> input) {
             vector<int> majv = maj(a, b, c);
             vector<int> sg0 = bigSimga0(a);
             vector<int> sg1 = bigSimga1(e);
-            vector<int> sg2 = bigSimga2(add(c,d));
+            vector<int> sg2 = bigSimga2(add(c, d));
             vector<int> k_int = bitsetToVecInt(bitset<32>(hexToBin(k[j])));
             t2 = add(add(add(h, sg1), chv), add(k_int, w[j].data));
             t1 = add(add(sg0, majv), sg2);
@@ -689,9 +680,9 @@ string sha_256(vector<int> input) {
             d = c;
             b = a;
             g = f;
-            e = add(d,t1);
+            e = add(d, t1);
             c = b;
-            vector<int>tempo = multiply(3,t1);
+            vector<int> tempo = multiply(3, t1);
             a = sub(tempo, t2);
 
 
@@ -746,10 +737,7 @@ string sha_256(vector<int> input) {
     res.append(binToHex(h));
 
 
-
-
-
-    return res ;
+    return res;
 
 
 }
@@ -759,7 +747,7 @@ vector<int> bigSimga0(vector<int> x) {
     vector<int> result, temp1, temp2;
     temp1 = XOR(ROT(x, 2), ROT(x, 13));
     temp2 = XOR(ROT(x, 22), SHF(x, 7));
-    result = XOR ( temp1, temp2);
+    result = XOR(temp1, temp2);
 //
 
 ////        sha-256 standard :
@@ -777,7 +765,6 @@ vector<int> bigSimga1(vector<int> x) {
     vector<int> result, temp1;
     temp1 = XOR(ROT(x, 6), ROT(x, 11));
     result = XOR(temp1, ROT(x, 25));
-
 
 
     return result;
@@ -798,7 +785,7 @@ vector<int> bigSimga2(vector<int> x) {
 
 vector<int> ch(vector<int> x, vector<int> y, vector<int> z) {
     vector<int> temp1, res;
-    temp1= XOR(andGate(x, y), andGate(notGate(y), z));
+    temp1 = XOR(andGate(x, y), andGate(notGate(y), z));
     res = XOR(temp1, andGate(notGate(x), z));
 
 //    standard :
@@ -921,54 +908,54 @@ vector<int> strToBinary(string txt) {
 
 }
 
-vector<int> multiply(int  n , vector<int> x){
+vector<int> multiply(int n, vector<int> x) {
 
     vector<int> res = x;
 
-    for (int i = 0; i < n -1; ++i) {
+    for (int i = 0; i < n - 1; ++i) {
 
-        res =add(res,x);
+        res = add(res, x);
 
     }
     return res;
 
 }
 
-vector<int> sub ( vector<int> x , vector<int> y ){
-    vector<int> res ;
-    vector<int> one ;
-    for( int i = 0 ; i< y.size() - 1 ; i++)
+vector<int> sub(vector<int> x, vector<int> y) {
+    vector<int> res;
+    vector<int> one;
+    for (int i = 0; i < y.size() - 1; i++)
         one.push_back(0);
     one.push_back(1);
 
-    res = add( x , add(notGate(y) ,one ));
+    res = add(x, add(notGate(y), one));
 //    res = add(x,notGate(y));
 
     return res;
 }
-vector<int> updateNumber( int size , vector<int> number){
 
-while ( number.size() <= size){
+vector<int> updateNumber(int size, vector<int> number) {
 
-    number.insert(number.begin(),0);
+    while (number.size() <= size) {
 
+        number.insert(number.begin(), 0);
+
+    }
+
+
+    return number;
 }
 
-
-    return  number;
-}
-
-bool lessThan( bitset<256> b1, bitset<256> b2){
+bool lessThan(bitset<256> b1, bitset<256> b2) {
 
     bool res = false;
     bool flag = false;
     for (int i = 0; i < b1.size(); ++i) {
 
-        if ( flag )
+        if (flag)
             break;
 
-        if ( b1[i] < b2[i] )
-        {
+        if (b1[i] < b2[i]) {
             res = true;
             flag = true;
             break;
