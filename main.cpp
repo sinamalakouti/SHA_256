@@ -14,9 +14,6 @@
 #define prev_block "17975b97c18ed1f7e255adf297599b55330edab87803c8170100000000000000"
 #define time_stamp "358b0553"
 #define diff "5350f119"
-#define target  "00000000000002816E0000000000000000000000000000000000000000000000"
-static int hash = 1;
-static int nonce = 0;
 
 using namespace std;
 
@@ -30,6 +27,12 @@ public :
 // method declaration :
 
 // 1-- main methods
+
+void init();
+
+double Cpu();
+
+SIZE_T Memory();
 
 vector<int> padding(vector<int> input);
 
@@ -76,6 +79,8 @@ vector<int> bitsetToVecInt(bitset<32> b);
 
 vector<int> bitsetToVecInt(bitset<64> b);
 
+vector<int> bitsetToVecInt(bitset<256> b);
+
 vector<int> bitsetToVecInt(bitset<640> b);
 
 vector<int> multiply(int n, vector<int> x);
@@ -96,7 +101,11 @@ string hexToBin(string sHex);
 
 string intToChar(int a);
 
-bool lessThan(bitset<256> b1, bitset<256> b2);
+vector<int> stringToIntVector(string text);
+
+bool lessThan(vector<int> b1, vector<int> b2);
+
+vector<int> updateBlockHeader(vector<int> block_header, vector<int> nonce);
 
 static int numberOfBlocks;
 
@@ -136,11 +145,11 @@ double Cpu(){
     return percent * 100;
 }
 
-SIZE_T Memory(){
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
-    return pmc.PrivateUsage;
-}
+//SIZE_T Memory(){
+//    PROCESS_MEMORY_COUNTERS_EX pmc;
+//    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+//    return pmc.PrivateUsage;
+//}
 
 int main() {
 
@@ -150,58 +159,52 @@ int main() {
 
     string merkel_root =  sha_256(strToBinary("abcd"));
 
-    string block_hedear = "";
-    block_hedear.append(version);
-    block_hedear.append(prev_block);
-    block_hedear.append(merkel_root);
-    block_hedear.append(time_stamp);
-    block_hedear.append(diff);
-    block_hedear.append("00000000");
+    cout << merkel_root + " merkel_root"<< endl;
 
-    vector<int> input = bitsetToVecInt(bitset<640>(hexToBin(block_hedear)));
+    string block_header = "";
+    block_header.append(version);
+    block_header.append(prev_block);
+    block_header.append(merkel_root);
+    block_header.append(time_stamp);
+    block_header.append(diff);
+    block_header.append("00000000");
+
+    vector<int> blockHeader = bitsetToVecInt(bitset<640>(hexToBin(block_header)));
+    vector<int> start_block_header = blockHeader;
 
     vector<int> nonce;
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(0);
-    nonce.push_back(1);
+    for (int i = 0; i < 32; i++)
+        nonce.push_back(0);
+
     vector<int> one;
     one.push_back(1);
 
+    one = updateNumber(nonce.size(), one);
 
-    vector<int> res = add(input, updateNumber(640, nonce));
+    string target = "1010101010101010101010101010101010101010101010101010101010101010";
+    //string target = "00000000000002816E0000000000000000000000000000000000000000000000";
 
     string hashResult = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-    while (lessThan(bitset<256>(hexToBin(hashResult)), bitset<256>(hexToBin(target))) == false) {
-
-        string tempHash = sha_256(add(input, nonce));
-        hashResult = sha_256(bitsetToVecInt(bitset<640>(hexToBin(tempHash))));
-
-        nonce = add(nonce, updateNumber(nonce.size(), one));
+    while (lessThan(stringToIntVector(hexToBin(hashResult)), stringToIntVector(hexToBin(target))) == false) {
+        blockHeader = updateBlockHeader(start_block_header,nonce);
+        string tempHash = sha_256(blockHeader);
+        hashResult = sha_256(stringToIntVector(hexToBin(tempHash)));
+        nonce = add(nonce, one);
     }
 
     cout<<hashResult<<endl;
 
-
     clock_t secondSeconds =  clock();
 
-    printf("\n\n%f seconds \n%f MB \n%f cpu percentage\n",
-           ((float)secondSeconds - (float)firstSeconds)/1000.0, Memory()/1000000.0 , Cpu());
+//    printf("\n\n%f seconds \n%f MB \n%f cpu percentage\n",
+//           ((float)secondSeconds - (float)firstSeconds)/1000.0, Memory()/1000000.0 , Cpu());
 
     return 0;
 }
 
 vector<int> padding(vector<int> input) {
 
-//    for (int j = 0; j < input.size(); ++j) {
-//        cout<<input[j];
-//    }
-//cout<<" " << endl;
     int size = input.size();
 
     vector<int> tmpInput = input;
@@ -217,11 +220,8 @@ vector<int> padding(vector<int> input) {
     for (int i = 0; i < binary.size(); i++) {
         tmpInput.push_back((binary[i]));
     }
-
-
     return tmpInput;
 }
-
 
 vector<Block> parsing(vector<int> input) {
 
@@ -231,13 +231,9 @@ vector<Block> parsing(vector<int> input) {
         Block block;
         for (int j = (i - 1) * 512; j < i * 512; j++) {
             block.data.push_back(input[j]);
-
         }
-
         blocks.push_back(block);
-
     }
-
     return blocks;
 }
 
@@ -462,7 +458,6 @@ Block add(Block block1, Block block2) {
         c_in = (block1.data[i] & block2.data[i]) | (c_in & (block1.data[i] ^ block2.data[i]));
 
         result.data.push_back(s);
-
     }
 
 
@@ -547,7 +542,7 @@ Block sigma1(Block block) {
 string binToHex(vector<int> binArr) {
     string result = "";
     string temp = "";
-    for (int i = 1; i <= 8; i++) {
+    for (int i = 1; i <= binArr.size()/4; i++) {
         temp = "";
         for (int j = ((i - 1) * 4); j <= (i * 4) - 1; j++) {
             temp.append(intToChar(binArr[j]));
@@ -585,12 +580,9 @@ string binToHex(vector<int> binArr) {
         } else if (temp.compare("1111") == 0) {
             result.append("f");
         }
-
-
     }
 
     return result;
-
 }
 
 string intToChar(int a) {
@@ -664,27 +656,18 @@ string sha_256(vector<int> input) {
     vector<Block> blocks = parsing(paddingResult);
 
     auto N = static_cast<int>(blocks.size());
-    vector<string> hashValues;
-    hashValues.push_back("6a09e667");
-    hashValues.push_back("bb67ae85");
-    hashValues.push_back("3c6ef372");
-    hashValues.push_back("a54ff53a");
-    hashValues.push_back("510e527f");
-    hashValues.push_back("9b05688c");
-    hashValues.push_back("1f83d9ab");
-    hashValues.push_back("5be0cd19");
 
     vector<int> a, b, c, d, e, f, g, h, t1, t2;
     vector<int> pre_a, pre_b, pre_c, pre_d, pre_e, pre_f, pre_g, pre_h;
 //        init variables
     pre_a = bitsetToVecInt(bitset<32>(hexToBin("6a09e667")));
-    pre_b = bitsetToVecInt(bitset<32>(hexToBin(hashValues[1])));
-    pre_c = bitsetToVecInt(bitset<32>(hexToBin(hashValues[2])));
-    pre_d = bitsetToVecInt(bitset<32>(hexToBin(hashValues[3])));
-    pre_e = bitsetToVecInt(bitset<32>(hexToBin(hashValues[4])));
-    pre_f = bitsetToVecInt(bitset<32>(hexToBin(hashValues[5])));
-    pre_g = bitsetToVecInt(bitset<32>(hexToBin(hashValues[6])));
-    pre_h = bitsetToVecInt(bitset<32>(hexToBin(hashValues[7])));
+    pre_b = bitsetToVecInt(bitset<32>(hexToBin("bb67ae85")));
+    pre_c = bitsetToVecInt(bitset<32>(hexToBin("3c6ef372")));
+    pre_d = bitsetToVecInt(bitset<32>(hexToBin("a54ff53a")));
+    pre_e = bitsetToVecInt(bitset<32>(hexToBin("510e527f")));
+    pre_f = bitsetToVecInt(bitset<32>(hexToBin("9b05688c")));
+    pre_g = bitsetToVecInt(bitset<32>(hexToBin("1f83d9ab")));
+    pre_h = bitsetToVecInt(bitset<32>(hexToBin("5be0cd19")));
 
 //    todo : initialize vector k
 
@@ -719,10 +702,7 @@ string sha_256(vector<int> input) {
         h = pre_h;
         vector<Block> w = expansion(blocks[i]);
 
-
         for (int j = 0; j < 64; j++) {
-
-
             vector<int> chv = ch(e, f, g);
             vector<int> majv = maj(a, b, c);
             vector<int> sg0 = bigSimga0(a);
@@ -759,8 +739,6 @@ string sha_256(vector<int> input) {
 
 //         updating has values
 
-
-
         pre_a = add(a, pre_a);
         pre_b = add(b, pre_b);
         pre_c = add(c, pre_c);
@@ -792,10 +770,7 @@ string sha_256(vector<int> input) {
     res.append(binToHex(g));
     res.append(binToHex(h));
 
-
     return res;
-
-
 }
 
 vector<int> bigSimga0(vector<int> x) {
@@ -860,8 +835,6 @@ vector<int> maj(vector<int> x, vector<int> y, vector<int> z) {
     res = XOR(temp1, andGate(y, z));
 
     return res;
-
-
 }
 
 vector<int> andGate(vector<int> x, vector<int> y) {
@@ -920,6 +893,17 @@ vector<int> bitsetToVecInt(bitset<8> b) {
 
 }
 
+vector<int> bitsetToVecInt(bitset<256> b) {
+
+    vector<int> res;
+    for (int i = 0; i < b.size(); i++) {
+        res.push_back((int) b[i]);
+
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+}
+
 vector<int> bitsetToVecInt(bitset<640> b) {
 
     vector<int> res;
@@ -929,7 +913,6 @@ vector<int> bitsetToVecInt(bitset<640> b) {
     }
     std::reverse(res.begin(), res.end());
     return res;
-
 }
 
 vector<int> bitsetToVecInt(bitset<64> b) {
@@ -944,7 +927,6 @@ vector<int> bitsetToVecInt(bitset<64> b) {
 
 }
 
-
 vector<int> strToBinary(string txt) {
 
     vector<int> result;
@@ -952,15 +934,10 @@ vector<int> strToBinary(string txt) {
 
         vector<int> tmp = bitsetToVecInt(bitset<8>(txt[i]));
 
-
         for (int j = 0; j < tmp.size(); j++) {
             result.push_back(tmp[j]);
-
         }
-
     }
-
-
     return result;
 
 }
@@ -1003,21 +980,55 @@ vector<int> updateNumber(int size, vector<int> number) {
     return number;
 }
 
-bool lessThan(bitset<256> b1, bitset<256> b2) {
-
-    bool res = false;
-    bool flag = false;
-    for (int i = 0; i < b1.size(); ++i) {
-
-        if (flag)
-            break;
-
-        if (b1[i] < b2[i]) {
-            res = true;
-            flag = true;
-            break;
+vector<int> stringToIntVector(string text){
+    vector<int> result;
+    for (int i = 0; i < text.size(); i++) {
+        switch (text[i]){
+            case '0':
+                result.push_back(0);
+                break;
+            case '1':
+                result.push_back(1);
+                break;
         }
     }
+    return result;
+}
 
-    return res;
+bool lessThan(vector<int> b1, vector<int> b2) {
+
+    bool result = false;
+
+    for (int i = 0; i < b1.size(); i++) {
+        if (b1[i] > b2[i]) {
+            result = false;
+            break;
+        }
+        else {
+            if (b1[i] < b2[i]) {
+                result = true;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+vector<int> updateBlockHeader(vector<int> block_header, vector<int> nonce){
+
+    string blockHeader = "";
+    for (int i = 0; i < block_header.size(); ++i) {
+        blockHeader.append(intToChar(block_header[i]));
+    }
+
+    string nonceStr = "";
+    for (int i = 0; i < nonce.size(); ++i) {
+        nonceStr.append(intToChar(nonce[i]));
+    }
+
+    string result = "";
+    result.append(nonceStr);
+    result.append(blockHeader);
+
+    return stringToIntVector(result);
 }
