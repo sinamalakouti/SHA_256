@@ -14,6 +14,9 @@
 #define prev_block "17975b97c18ed1f7e255adf297599b55330edab87803c8170100000000000000"
 #define time_stamp "358b0553"
 #define diff "5350f119"
+#define target  "00000000000002816E0000000000000000000000000000000000000000000000"
+static int hash = 1;
+static int nonce = 0;
 
 using namespace std;
 
@@ -580,9 +583,12 @@ string binToHex(vector<int> binArr) {
         } else if (temp.compare("1111") == 0) {
             result.append("f");
         }
+
+
     }
 
     return result;
+
 }
 
 string intToChar(int a) {
