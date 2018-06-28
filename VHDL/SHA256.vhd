@@ -49,7 +49,7 @@ architecture Behavioral of SHA256 is
                 when START =>
                   hash<= x"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
                   merkelRoot <= sha(input);
-                  --nextState <= CREATE_BLOCK;
+                  nextState <= CREATE_BLOCK;
                 when CREATE_BLOCK =>
                   blockHeader <= version & hashPrevBlock & merkelRoot & timestamp & difficulty & nonce;
                   nextState <= CHECKHER;

@@ -4,6 +4,8 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 use work.types.all;
 use work.constants.all;
+use STD.textio.all;
+use ieee.std_logic_textio.all;
 
 package Utils is
 
@@ -71,9 +73,9 @@ package body Utils is
          variable outp : blocks ((inp'length / 512) - 1 downto 0);
          begin
             numberOfBlocks := inp'length / 512;
-            parse : for i in 1 to ((inp'length / 512)) loop
+            parse : for i in (inp'length / 512) downto 1 loop
               temp := inp((i * 512) - 1 downto (i - 1) * 512);
-              outp(i - 1) := temp;
+              outp((inp'length / 512) - i) := temp;
             end loop;
          return outp;
      end function;
@@ -85,6 +87,8 @@ package body Utils is
      variable p_a,p_b,p_c,p_d,p_e,p_f,p_g,p_h : std_logic_vector(31 downto 0);
      variable w : W;
      variable outp : std_logic_vector(255 downto 0);
+          file rs : text open write_mode is "navid.txt";
+         variable row : line;
      begin
        p_a := pre_a;
        p_b := pre_b;
@@ -104,31 +108,34 @@ package body Utils is
          f := p_f;
          g := p_g;
          h := p_h;
+             
+                write (row, inp(0));
+                writeline(rs, row);
          w := expansion(inp(i));
 
          we : for i in 0 to 63 loop
-           --t2 := h + bigSigma1(e1) + ch(e1,f,g) + k_values(i) + w(i);
-           --t1 := bigSigma0(a) + maj(a,b,c) + bigSigma2(c + d);
-           --h := g;
-           --f := e1;
-           --d := c;
-           --b := a;
-           --g := f;
-           --e1 := d + t1;
-           --c := b;
-           --a := multiply(t1,3) - t2;
+           t2 := h + bigSigma1(e1) + ch(e1,f,g) + k_values(i) + w(i);
+           t1 := bigSigma0(a) + maj(a,b,c) + bigSigma2(c + d);
+           h := g;
+           f := e1;
+           d := c;
+           b := a;
+           g := f;
+           e1 := d + t1;
+           c := b;
+           a := multiply(t1,3) - t2;
            
            --standard :
-           t1 := h + bigSigma1(e1) + ch(e1,f,g) + k_values(i) + w(i);
-           t2 := bigSigma0(a) + maj(a,b,c);
-           h := g;
-           g := f;
-           f := e1;
-           e1 := d + t1;
-           d := c;
-           c := b;
-           b := a;
-           a := t1 + t2;
+           --t1 := h + bigSigma1(e1) + ch(e1,f,g) + k_values(i) + w(i);
+           --t2 := bigSigma0(a) + maj(a,b,c);
+           --h := g;
+           --g := f;
+           --f := e1;
+           --e1 := d + t1;
+           --d := c;
+           --c := b;
+           --b := a;
+           --a := t1 + t2;
          end loop;
 
          p_a := a + p_a;
@@ -163,20 +170,20 @@ package body Utils is
                tempOut(i) := temp;
            end loop;
            for i in 16 to 63 loop
-               --temp := sigma1(tempOut(i - 1)) + tempOut(i - 6) + sigma0(tempOut(i - 12)) + tempOut(i - 15);
+               temp := sigma1(tempOut(i - 1)) + tempOut(i - 6) + sigma0(tempOut(i - 12)) + tempOut(i - 15);
                --standard :
-               temp := sigma1(tempOut(i - 2)) + tempOut(i - 7) + sigma0(tempOut(i - 15)) + tempOut(i - 16);
+               --temp := sigma1(tempOut(i - 2)) + tempOut(i - 7) + sigma0(tempOut(i - 15)) + tempOut(i - 16);
                
                tempOut(i) := temp;
            end loop;
-           --for i in 0 to 63 loop
-               --outp(i) := permutation(tempOut(i));
-           --end loop;
+           for i in 0 to 63 loop
+               outp(i) := permutation(tempOut(i));
+           end loop;
            
            --standard:
-           for i in 0 to 63 loop
-             outp(i) := tempOut(i);
-          end loop;
+           --for i in 0 to 63 loop
+             --outp(i) := tempOut(i);
+          --end loop;
            return outp;
    end function;
 --permutation
@@ -205,23 +212,23 @@ package body Utils is
 --sigma0
     function sigma0 (x: std_logic_vector) return std_logic_vector is
         begin
-            --return std_logic_vector(rotate_right(unsigned(x), 17) xor rotate_right(unsigned(x),14) xor shift_right(unsigned(x),12));
+            return std_logic_vector(rotate_right(unsigned(x), 17) xor rotate_right(unsigned(x),14) xor shift_right(unsigned(x),12));
             --standard:
-            return std_logic_vector(rotate_right(unsigned(x), 7) xor rotate_right(unsigned(x),18) xor shift_right(unsigned(x),3));
+            --return std_logic_vector(rotate_right(unsigned(x), 7) xor rotate_right(unsigned(x),18) xor shift_right(unsigned(x),3));
     end function sigma0;
 --sigma1
     function sigma1 (x: std_logic_vector) return std_logic_vector is
         begin
-            --return std_logic_vector(rotate_right(unsigned(x), 9) xor rotate_right(unsigned(x),19) xor shift_right(unsigned(x),9));
+            return std_logic_vector(rotate_right(unsigned(x), 9) xor rotate_right(unsigned(x),19) xor shift_right(unsigned(x),9));
             --standard:
-            return std_logic_vector(rotate_right(unsigned(x), 17) xor rotate_right(unsigned(x),19) xor shift_right(unsigned(x),10));
+            --return std_logic_vector(rotate_right(unsigned(x), 17) xor rotate_right(unsigned(x),19) xor shift_right(unsigned(x),10));
     end function sigma1;
 --bigSigma0
     function bigSigma0 (x: std_logic_vector) return std_logic_vector is
         begin
-           --return std_logic_vector(rotate_right(unsigned(x), 2) xor rotate_right(unsigned(x),13) xor rotate_right(unsigned(x),22) xor shift_right(unsigned(x),7));
+           return std_logic_vector(rotate_right(unsigned(x), 2) xor rotate_right(unsigned(x),13) xor rotate_right(unsigned(x),22) xor shift_right(unsigned(x),7));
            --standard:
-           return std_logic_vector(rotate_right(unsigned(x), 2) xor rotate_right(unsigned(x),13) xor rotate_right(unsigned(x),22)); 
+           --return std_logic_vector(rotate_right(unsigned(x), 2) xor rotate_right(unsigned(x),13) xor rotate_right(unsigned(x),22)); 
     end function bigSigma0;
 --bigSigma1
     function bigSigma1 (x: std_logic_vector) return std_logic_vector is
@@ -236,9 +243,9 @@ package body Utils is
 --ch
     function ch(x, y, z : std_logic_vector) return std_logic_vector is
       begin
-        --return (x and y) xor ((not y) and z) xor ((not x) and z);
+        return (x and y) xor ((not y) and z) xor ((not x) and z);
         -- standard:
-        return (x and y) xor ((not x) and z);
+        --return (x and y) xor ((not x) and z);
     end function ch;
 --maj
     function maj(x, y, z : std_logic_vector) return std_logic_vector is

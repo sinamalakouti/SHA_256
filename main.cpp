@@ -159,7 +159,7 @@ int main() {
 
     clock_t firstSeconds =  clock();
 
-    string merkel_root =  sha_256(strToBinary("abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"));
+    string merkel_root =  sha_256(strToBinary("abcd"));
 
     cout << merkel_root + " merkel_root"<< endl;
 
@@ -188,13 +188,12 @@ int main() {
 
     string hashResult = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-//    while (lessThan(stringToIntVector(hexToBin(hashResult)), stringToIntVector(hexToBin(target))) == false) {
-//        whileInput = updateBlockHeader(blockHeader,nonce);
-//        string tempHash = sha_256(whileInput);
-//        hashResult = sha_256(stringToIntVector(hexToBin(tempHash)));
-//        cout << endl;
-//        nonce = add(nonce, one);
-//    }
+    while (lessThan(stringToIntVector(hexToBin(hashResult)), stringToIntVector(hexToBin(target))) == false) {
+        whileInput = updateBlockHeader(blockHeader,nonce);
+        string tempHash = sha_256(whileInput);
+        hashResult = sha_256(stringToIntVector(hexToBin(tempHash)));
+        nonce = add(nonce, one);
+    }
 
     cout<<hashResult<<endl;
 
@@ -370,11 +369,11 @@ vector<Block> expansion(Block block) {
 
         Block b;
 
-//        Block temp1 = add(sigma1(blocks[i - 1]), blocks[i - 6]);
-//        Block temp2 = add(sigma0(blocks[i - 12]), blocks[i - 15]);
+        Block temp1 = add(sigma1(blocks[i - 1]), blocks[i - 6]);
+        Block temp2 = add(sigma0(blocks[i - 12]), blocks[i - 15]);
 //standard :
-        Block temp1 = add(sigma1(blocks[i - 2]), blocks[i - 7]);
-        Block temp2 = add(sigma0(blocks[i - 15]), blocks[i - 16]);
+//        Block temp1 = add(sigma1(blocks[i - 2]), blocks[i - 7]);
+//        Block temp2 = add(sigma0(blocks[i - 15]), blocks[i - 16]);
 
 
         b = add(temp1, temp2);
@@ -386,22 +385,22 @@ vector<Block> expansion(Block block) {
     for (int k = 0; k < blocks.size(); ++k) {
 
         Block b = blocks[k];
-//        vector<int> temp;
-//        for (int k = b.data.size() - 1; k >= 24; k--) {
-//            temp.push_back(b.data[k]);
-//        }
-//
-//        for (int k = 16; k <= 23; k++) {
-//            temp.push_back(b.data[k]);
-//        }
-//        for (int k = 15; k >= 0; k--) {
-//            temp.push_back(b.data[k]);
-//        }
-//        b.data = temp;
-//        blocks[k] = b;
+        vector<int> temp;
+        for (int k = b.data.size() - 1; k >= 24; k--) {
+            temp.push_back(b.data[k]);
+        }
+
+        for (int k = 16; k <= 23; k++) {
+            temp.push_back(b.data[k]);
+        }
+        for (int k = 15; k >= 0; k--) {
+            temp.push_back(b.data[k]);
+        }
+        b.data = temp;
+        blocks[k] = b;
 
 // standard
-      blocks[k] = b;
+//      blocks[k] = b;
     }
 
     return blocks;
@@ -509,12 +508,12 @@ Block sigma0(Block block) {
 
     Block result;
 
-//    Block temp = XOR(ROT(block, 17), ROT(block, 14));
-//    result = XOR(temp, SHF(block, 12));
+    Block temp = XOR(ROT(block, 17), ROT(block, 14));
+    result = XOR(temp, SHF(block, 12));
 
 //    standard
-    Block temp = XOR(ROT(block, 7), ROT(block, 18));
-    result = XOR(temp, SHF(block, 3));
+//    Block temp = XOR(ROT(block, 7), ROT(block, 18));
+//    result = XOR(temp, SHF(block, 3));
 
     return result;
 
@@ -525,12 +524,12 @@ Block sigma1(Block block) {
 
     Block result,temp;
 
-//    temp = XOR(ROT(block, 9), ROT(block, 19));
-//    result = XOR(temp, SHF(block, 9));
+    temp = XOR(ROT(block, 9), ROT(block, 19));
+    result = XOR(temp, SHF(block, 9));
 
 //    standard :
-     temp = XOR(ROT(block, 17), ROT(block, 19));
-     result = XOR(temp, SHF(block, 10));
+//     temp = XOR(ROT(block, 17), ROT(block, 19));
+//     result = XOR(temp, SHF(block, 10));
 
     return result;
 }
@@ -707,30 +706,31 @@ string sha_256(vector<int> input) {
             vector<int> sg1 = bigSimga1(e);
             vector<int> sg2 = bigSimga2(add(c, d));
             vector<int> k_int = bitsetToVecInt(bitset<32>(hexToBin(k[j])));
-//            t2 = add(add(add(h, sg1), chv), add(k_int, w[j].data));
-//            t1 = add(add(sg0, majv), sg2);
-//            h = g;
-//            f = e;
-//            d = c;
-//            b = a;
-//            g = f;
-//            e = add(d, t1);
-//            c = b;
-//            vector<int> tempo = multiply(3, t1);
-//            a = sub(tempo, t2);
+            t2 = add(add(add(h, sg1), chv), add(k_int, w[j].data));
+            t1 = add(add(sg0, majv), sg2);
+            h = g;
+            f = e;
+            d = c;
+            b = a;
+            g = f;
+            e = add(d, t1);
+            c = b;
+            vector<int> tempo = multiply(3, t1);
+            a = sub(tempo, t2);
 
 //        standard :
 
-        t1 = add(add(add(h,sg1),chv ), add(k_int, w[j].data)     );
-        t2 = add( sg0 ,majv  );
-        h=g;
-        g=f;
-        f=e;
-        e=add(d,t1);
-        d=c;
-        c=b;
-        b=a;
-        a =add(t1,t2);
+//        t1 = add(add(add(h,sg1),chv ), add(k_int, w[j].data)     );
+//        t2 = add( sg0 ,majv  );
+//        h=g;
+//        g=f;
+//        f=e;
+//        e=add(d,t1);
+//        d=c;
+//        c=b;
+//        b=a;
+//        a =add(t1,t2);
+
         }
 
 //         updating hash values
@@ -769,14 +769,13 @@ string sha_256(vector<int> input) {
 vector<int> bigSimga0(vector<int> x) {
 
     vector<int> result, temp1, temp2;
-//    temp1 = XOR(ROT(x, 2), ROT(x, 13));
-//    temp2 = XOR(ROT(x, 22), SHF(x, 7));
-//    result = XOR(temp1, temp2);
+    temp1 = XOR(ROT(x, 2), ROT(x, 13));
+    temp2 = XOR(ROT(x, 22), SHF(x, 7));
+    result = XOR(temp1, temp2);
 
 
 //        sha-256 standard :
-    temp1 = XOR(ROT(x, 2), ROT(x, 13));
-    result = XOR(temp1, ROT(x, 22));
+//    temp1 = XOR(ROT(x, 2), ROT(x, 13));//   result = XOR(temp1, ROT(x, 22));
 
     return result;
 }
@@ -808,7 +807,7 @@ vector<int> ch(vector<int> x, vector<int> y, vector<int> z) {
     res = XOR(temp1, andGate(notGate(x), z));
 
 //    standard :
-    res= XOR(andGate(x, y), andGate(notGate(x), z));
+//    res= XOR(andGate(x, y), andGate(notGate(x), z));
 
 
     return res;
